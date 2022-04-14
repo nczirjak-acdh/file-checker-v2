@@ -1,0 +1,23 @@
+{
+    "name": "acdh-oeaw/repo-file-checker",
+    "description": "Script for checking if files fulfill ARCHE repository ingestion requirements",
+    "keywords": [],
+    "homepage": "https://github.com/acdh-oeaw/repo-file-checker",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Norbert Czirjak",
+            "email": "norbert.czirjak@oeaw.ac.at"
+        }
+    ],
+    "require": {
+        "php": ">=8.0 <8.2",
+        "guiguiboy/php-cli-progress-bar": "0.0.4",
+        "whikloj/bagittools": "3.0.2",
+        "smalot/pdfparser": "*",
+        "zozlak/argparse": "^1"
+    },
+    "autoload": {
+        "psr-4": {"OEAW\\": "./src/"}
+    }
+}

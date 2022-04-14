@@ -1,0 +1,2 @@
+36c4d6fc6f98e2969bbb6c089baffb4c7ac2ac9e92af0e7a0bc2b008  data/wabbit.txt
+4625c0134980ac269f54eeacdacddbc7498418a73fb52a99b3484a35  data/others/information.txt

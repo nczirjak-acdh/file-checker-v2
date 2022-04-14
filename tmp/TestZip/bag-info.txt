@@ -1,0 +1,7 @@
+Source-Organization: The Daleks
+Source-Address: Skaro
+Contact-Name: F87-C45
+External-Description: Covert plans for the eventual enslavement of all life in
+  the universe. Also a wonderful parfait recipe.
+Bagging-Date: 1963-12-21
+ 
