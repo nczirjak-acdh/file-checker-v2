@@ -9,10 +9,7 @@ namespace OEAW\Helper;
  */
 class Helper {
 
-    private $reportHelper;
-   
     public function __construct() {
-        $this->reportHelper = new \OEAW\Helper\ReportFileHelper();
         
     }
     

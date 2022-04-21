@@ -1,6 +1,5 @@
 <?php
 
-
 namespace OEAW\Helper;
 
 /**
@@ -14,7 +13,7 @@ class ReportFileHelper {
         "directoryList",
         "duplicates",
         "error",
-        "extension",
+        "extensions",
         "files",
         "fileList",
         "fileTypeList"
@@ -26,23 +25,36 @@ class ReportFileHelper {
         "fileList"
     );
     
-    public function createReportFiles(\OEAW\Object\SettingsObject $settings, array $result): bool {
-
+    private $fileList = [];
+    private $dirList = [];
+    private $errors = [];
+    private $settings;
+    
+    public function __construct(array $result, \OEAW\Object\SettingsObject $settings) {
+        $this->fileList = $result['fileList'];
+        $this->dirList = $result['dirList'];
+        $this->errors = $result['errors'];
+        $this->settings = $settings;
+        
+    }
+    
+    public function createReportFiles(): bool {
+        
         //create the empty json files
-        $this->createReportFile($this::$jsonFiles, $settings->getActualReportDir());
+        $this->createReportFile($this::$jsonFiles, $this->settings->getActualReportDir());
 
-        if ($settings->getOutputMode() == 1) {
-            $this->createReportFile($this::$htmlFiles, $settings->getActualReportDir(), "html");
+        if ($this->settings->getOutputMode() == 1) {
+            $this->createReportFile($this::$htmlFiles, $this->settings->getActualReportDir(), "html");
         }
-        switch ($settings->getOutputMode()) {
+        switch ($this->settings->getOutputMode()) {
             case 0:
-                $res = $this->jsonOutput($result, $settings);
+                $res = $this->jsonOutput();
                 break;
             case 1:
-                $res = $this->jsonAndHtmlOutput($result, $settings);
+                $res = $this->jsonAndHtmlOutput();
                 break;
             case 2:
-                $res = $this->ndJsonOutput($result, $settings);
+                $res = $this->ndJsonOutput();
                 break;
             default:
                 break;
@@ -63,47 +75,54 @@ class ReportFileHelper {
         }
     }
 
-    public function jsonOutput(array $result, \OEAW\Object\SettingsObject $settings) {
+    public function jsonOutput() {
         
-        if (isset($result['fileList']) && count($result['fileList']) > 0) {
-            $this->createDirectoryListJson($result['fileList'], $settings->getActualReportDir() . "/fileList.json");
+        if (isset($this->fileList) && count($this->fileList) > 0) {
+            $this->createFileExtensionListData();
+            $this->createFileList();
         }
         
-        if (isset($result['dirList']) && count($result['dirList']) > 0) {
-            $this->createDirectoryListJson($result['dirList'], $settings->getActualReportDir() . "/directoryList.json");
+        if (isset($this->dirList) && count($this->dirList) > 0) {
+            $this->createDirectoryListJson();
         }
         
-        if(isset($result['errors']) && count($result['errors']) > 0) {
-            $this->createErrorsJson($result['errors'], $settings->getActualReportDir()."/error.json");
+        if(isset($this->errors) && count($this->errors) > 0) {
+            $this->createErrorsJson();
         }
     }
 
-    private function createErrorsJson(array $data, string $file) {      
+    private function createErrorsJson() {      
+        $report = new \OEAW\Report\FileErrorListReport($this->errors, $this->settings->getActualReportDir()."/error.json");
+        $report->__toJson();    
         
-        $result = array();
-        foreach($data as $k => $v) {
-            $result[] = array("erroryType" => $v['errorType'], "dir" => $v['dir'], "filename" => $v['filename']);
-        } 
-        $jsonData = array("data" => $result);
-        $json = json_encode($jsonData, JSON_UNESCAPED_SLASHES);
-        file_put_contents($file, $json);
     }
     
-    private function createDirectoryListJson(array $data, string $file) {
+    private function createDirectoryListJson() {
         $dirs = [];
-        foreach ($data as $k => $v) {
+        foreach ($this->dirList as $k => $v) {
             $dirs[] = $v->toJsonFile();
         }
         $jsonData = array("data" => $dirs);
         $json = json_encode($jsonData, JSON_UNESCAPED_SLASHES);
-        file_put_contents($file, $json);
+        file_put_contents($this->settings->getActualReportDir() . "/directoryList.json", $json);
+    }
+    
+    private function createFileExtensionListData() {
+        $report = new \OEAW\Report\FileExtensionListReport($this->fileList, $this->settings->getActualReportDir()."/extensions.json");
+        $report->__toJson();        
     }
 
-    public function htmlOutput(array $result) {
+    public function htmlOutput() {
         
     }
 
-    public function ndJsonOutput(array $result) {
+    public function ndJsonOutput() {
         
     }
+
+    private function createFileList() {
+        $report = new \OEAW\Report\FileListReport($this->fileList, $this->settings->getActualReportDir()."/fileList.json");
+        $report->__toJson(); 
+    }
+
 }

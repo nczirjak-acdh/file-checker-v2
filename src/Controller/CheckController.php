@@ -11,13 +11,10 @@ class CheckController {
     
     private $settings;
     private $helper;
-    private $reportHelper;
-    private $result = array();
     
     public function __construct(array $args) {
         $this->settings = new \OEAW\Object\SettingsObject($args);
         $this->helper = new \OEAW\Helper\Helper();
-        $this->reportHelper = new \OEAW\Helper\ReportFileHelper();        
     }
     
     public function start() {
@@ -32,24 +29,18 @@ class CheckController {
         //create the reportDir for the actual report
         $this->settings->createReportDirForActualReport();
         
-        $this->result = $this->runChecks();
+        $this->runChecks();
         
-        if(count($this->result) == 0) {
-            throw new \Exception('There are no files! runChecks failed!');
-        }
         
-        echo "\n Generating reports...\n";
-        $this->createReports();
-        echo "Check is done!";
+        
+        
     }
     
-    private function runChecks(): array {
+    private function runChecks() {
         $checks = new \OEAW\Helper\Checks();
-        return $checks->start($this->settings);       
+        $checks->start($this->settings);       
     }
     
-    private function createReports() {
-        return $this->reportHelper->createReportFiles($this->settings, $this->result);        
-    }        
+           
     
 }

@@ -16,20 +16,42 @@ class Checks {
     private $directoryList = [];
     private $fileList = [];
     private $errors = [];
-    private $fileObj;
+    private $fileExtensions = [];
+    private $reportHelper;
 
+    public function __construct() {
+            
+    }
+    
     public function start(\OEAW\Object\SettingsObject $settings) {
         $this->settings = $settings;
 
         echo "\n File check started...\n";
         //check the directories and files and run dir and file checks
         $this->iterateDirectories();
-
-        //check the duplications
-        $this->checkDuplications();
-
-        return array("errors" => $this->errors, "fileList" => $this->fileList, "dirList" => $this->directoryList);
+        
+        //run the directory checks
+        $this->runDirectoryChecks();
+        
+        //run the file checks
+        $this->runFileChecks();
+        
+        echo "\n Generating reports...\n";
+        $this->createReports();
+        
+        
+       
+        //$this->createFileTypeListData();
+        if(count($this->fileList) == 0) {
+            throw new \Exception('There are no files! runChecks failed!');
+        }
+        echo "Check is done!";
     }
+    
+    private function createReports() {
+        $this->reportHelper = new \OEAW\Helper\ReportFileHelper(array("errors" => $this->errors, "fileList" => $this->fileList, "dirList" => $this->directoryList), $this->settings);    
+        return $this->reportHelper->createReportFiles();        
+    } 
 
     private function checkDirectory(): void {
          try {
@@ -57,16 +79,15 @@ class Checks {
                 \RecursiveIteratorIterator::SELF_FIRST,
                 \RecursiveIteratorIterator::CATCH_GET_CHILD // Ignore "Permission denied"
         );
-        
+        echo "fetch files/folders\n";
         foreach ($iter as $path => $dir) {            
             if ($dir->isDir()) {
-                $this->runDirectoryChecks($dir->getPathName(), $dir);
+                $this->directoryList[] = new \OEAW\Object\DirectoryObject($dir, $this->settings->getDirectoryToCheck());
             } else {
                 echo $dir->getPathName()."\n";
                 $this->progressBar->advance();
                 echo "\n";
-                $this->createFileObject($dir->getPathName(), $dir);
-                $this->runFileChecks($path);
+                $this->fileList[] = new \OEAW\Object\FileObject($dir);
             }
         }
     }
@@ -78,70 +99,18 @@ class Checks {
         }
     }
 
-    private function runDirectoryChecks(string $filename, object $file) {
-        $obj = new \OEAW\Helper\DirectoryChecks();
-        $dirObj = $obj->start($filename, $file, $this->settings->getDirectoryToCheck());
-        $this->directoryList[] = $dirObj;
-        if ($dirObj->getValid() === false) {
-            $this->errors[] = array("errorType" => "Directory name is invalid", "filename" => $dirObj->getName(), "dir" => $dirObj->getName());
-        }
+    private function runDirectoryChecks() {
+        $dc = new \OEAW\Helper\DirectoryChecks();
+        $this->errors = $dc->checkValidDirectories($this->directoryList);
     }
 
-    private function runFileChecks(string $actualDirectory) {
+    private function runFileChecks() {
         //run the filechecks
         $obj = new \OEAW\Helper\FileChecks();
-        $file = $obj->start($actualDirectory, $this->fileObj, $this->settings);
-        $this->fileList[] = $file['fileObj'];
-
-        if (count($file['errors']) > 0) {
-            $this->errors = $file['errors'];
-        }
+        $this->errors = $obj->start($this->fileList, $this->settings);
+      
     }
 
-    private function createFileObject(string $filename, object $file) {
-        $this->fileObj = new \OEAW\Object\FileListObject(
-                $file->getFileName(),
-                str_replace($file->getFileName(), "", $filename),
-                $file->getSize(),
-                $file->getExtension(),
-                mime_content_type($filename),
-                $this->checkFileNameValidity($file->getFileName()),
-                gmdate("Y-m-d\TH:i:s\Z", $file->getMTime())
-        );
-    }
-
-    private function checkDuplications() {
-
-        $new = array();
-        //we get the filenames
-        foreach ($this->fileList as $k => $value) {
-            $new[$k] = serialize(strtolower($value->getFileName()));
-        }
-
-        //remove the duplicates
-        $sorted = array_unique($new);
-
-        foreach ($this->fileList as $k => $v) {
-            //check which key is missing from the list
-            if (!isset($sorted[$k])) {
-                $this->errors[] = array("errorType" => "Duplicated Filename!", "errorCode" => 1, "filename" => $v->getFileName(), "dir" => $v->getDirectory());
-            }
-        }
-    }
-
-    /**
-     * 
-     * Checks the filename validation
-     * 
-     * @param string $filename
-     * @return bool : true
-     */
-    private function checkFileNameValidity(string $filename): bool {
-        if (preg_match('/[^A-Za-z0-9\_\(\)\-\.]/', $filename)) {
-            $this->errors[] = array("errorType" => "File name contains invalid characters", "errorCode" => 0, "dir" => $this->actualDirectory, "filename" => $filename);
-            return false;
-        }
-        return true;
-    }
+    
 
 }

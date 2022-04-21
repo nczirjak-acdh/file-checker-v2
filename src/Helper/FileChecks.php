@@ -11,9 +11,9 @@ class FileChecks {
 
     private $obj;
     private $errors = [];
-    private $fileObj;
-    private $actualDirectory;
+    private $files;
     private $settings;
+    private $progressBar;
     private static $errorCodes = array(
         0 => "general error",
         1 => "duplications"
@@ -21,50 +21,82 @@ class FileChecks {
 
     /**
      * 
-     * @param string $actualDirectory
-     * @param object $fileObj
+     * @param array $files
      * @param \OEAW\Object\SettingsObject $settings
      * @return array
      */
-    public function start(string $actualDirectory, object $fileObj, \OEAW\Object\SettingsObject $settings): array {
-        $this->fileObj = $fileObj;
-        $this->actualDirectory = $actualDirectory;
+    public function start(array $files, \OEAW\Object\SettingsObject $settings): array {
+        $this->files = $files;
         $this->settings = $settings;
-        $this->obj = $fileObj;
         $this->runChecks();
-        return array("fileObj" => $this->obj, "errors" => $this->errors);
+        return $this->errors;
     }
 
     private function runChecks() {
 
-        if ($this->obj->isZipFile()) {
-            $this->checkZipFiles();
+        echo "check duplications... \n";
+        $this->checkDuplications();
+        
+        $this->progressBar = new \ProgressBar\Manager(0, count($this->files));
+        foreach($this->files as $k => $obj) {
+            
+            echo $obj->getFileName()."\n";
+                
+            
+            $this->obj = $obj;
+            echo "zip check... \n";
+            if ($this->obj->isZipFile()) {
+                $this->checkZipFiles();
+            }
+
+            echo "pdf check... \n";
+            if ($this->obj->isPdfFile()) {
+                $this->checkPdfFile();
+            }
+
+            echo "mime check... \n";
+            $this->checkMimeWithExtensionBySignatures();
+
+            echo "rar check... \n";
+            $this->isRarFile();
+
+            echo "blacklist check... \n";
+            $this->checkBlackList();
+
+            echo "password protected XLS DOCX check... \n";
+            $this->isPasswordProtectedXLSXDOCX();
+
+            echo "bagit file check... \n";
+            if ($this->obj->isBagItFile()) {
+                // $this->checkBagitFile();
+            }
+            echo "Damaged file check... \n";
+            $this->isFileDamaged();
+            
+            $this->progressBar->advance();
+            echo "\n";
         }
-
-        if ($this->obj->isPdfFile()) {
-            $this->checkPdfFile();
-        }
-
-        //mime
-        $this->checkMimeWithExtensionBySignatures();
-
-        //rar
-        $this->isRarFile();
-
-        //blacklist
-        $this->checkBlackList();
-
-        //check PW protected XLSX, DOCX
-        $this->isPasswordProtectedXLSXDOCX();
-
-        //bagit
-        if ($this->obj->isBagItFile()) {
-            // $this->checkBagitFile();
-        }
-
-        $this->isFileDamaged();
     }
 
+    private function checkDuplications() {
+
+        $new = array();
+        //we get the filenames
+        foreach ($this->files as $k => $value) {
+            $new[$k] = serialize(strtolower($value->getFileName()));
+        }
+
+        //remove the duplicates
+        $sorted = array_unique($new);
+
+        foreach ($this->files as $k => $v) {
+            //check which key is missing from the list
+            if (!isset($sorted[$k])) {
+                $this->errors[] = array("errorType" => "Duplicated Filename!", "errorCode" => 1, "filename" => $v->getFileName(), "dir" => $v->getDirectory());
+            }
+        }
+    }
+    
     /**
      * Check blacklisted files
      * @return void

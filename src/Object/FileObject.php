@@ -7,7 +7,7 @@ namespace OEAW\Object;
  *
  * @author nczirjak
  */
-class FileListObject {
+class FileObject {
 
     private $filename;
     private $filenameAndDir;
@@ -19,16 +19,15 @@ class FileListObject {
     private $lastmodification;
     private $errors = [];
 
-    public function __construct(string $filename, string $directory, int $size,
-            string $extension, string $type, bool $valid, string $lastmodification) {
-        $this->filename = $filename;
-        $this->directory = $directory;
-        $this->filenameAndDir = $directory . $filename;
-        $this->size = $size;
-        $this->extension = $extension;
-        $this->type = $type;
-        $this->valid = $valid;
-        $this->lastmodification = $lastmodification;
+    public function __construct(object $file) {
+        $this->filename = $file->getFileName();
+        $this->directory = str_replace($file->getFileName(), "", $file->getPathName());
+        $this->filenameAndDir = $file->getPathName();
+        $this->size = $file->getSize();
+        $this->extension = $file->getExtension();
+        $this->type = mime_content_type($this->filenameAndDir);
+        $this->valid = $this->checkFileNameValidity($file->getFileName());
+        $this->lastmodification = gmdate("Y-m-d\TH:i:s\Z", $file->getMTime());
     }
 
     public function getFilename() {
@@ -119,5 +118,21 @@ class FileListObject {
             "filename" => $this->getFilename(), "extension" => $this->getExtension()
             );
     }
+    
+    /**
+     * 
+     * Checks the filename validation
+     * 
+     * @param string $filename
+     * @return bool : true
+     */
+    private function checkFileNameValidity(): bool {
+        if (preg_match('/[^A-Za-z0-9\_\(\)\-\.]/', $this->filename)) {
+            $this->errors[] = array("errorType" => "File name contains invalid characters", "errorCode" => 0, "dir" => $this->directory, "filename" => $this->filename);
+            return false;
+        }
+        return true;
+    }
+
 
 }
