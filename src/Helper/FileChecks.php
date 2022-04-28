@@ -78,10 +78,7 @@ class FileChecks {
             
             $this->progressBar->advance();
             echo "\n";
-            
-            echo '<pre>';
-            var_dump($this->errors);
-            echo '</pre>';
+           
         }
     }
 

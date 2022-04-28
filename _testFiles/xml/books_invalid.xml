@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <x:books xmlns:x="urn:books"
          xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-         xsi:schemaLocation='http://localhost/acdh/books.xsd'>
+         xsi:schemaLocation='https://devility.hu/books_online.xsd'>
     <book id="bk001">
         <author>Writer</author>
         <title>The First Book</title>

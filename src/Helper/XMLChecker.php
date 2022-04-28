@@ -25,25 +25,21 @@ class XMLChecker {
         $this->xml = new \DOMDocument();
         $this->xml->load($this->xmlFile);
         $this->getXSDFromXML();
-        $this->validateXML();
     }
     
     private function getXSDFromXML(): void {
-        $xsd = $this->xml->documentElement->getAttributeNS($this->xml->lookupNamespaceURI('xsi'), 'schemaLocation');
-        $this->xsdFile = $this->xmlDir.$xsd;
-        if ((strpos("https://", $xsd) !== false) || (strpos("http://", $xsd) !== false)) {
-            $this->xsdFile = $this->downloadXSD();
-        }
+        $this->xsdFile = $this->xml->documentElement->getAttributeNS($this->xml->lookupNamespaceURI('xsi'), 'schemaLocation');
+        
+        if ((strpos($this->xsdFile, "http://") !== false) || (strpos($this->xsdFile, "https://") !== false)) {
+            //online xsd
+            
+        }else {
+            //localhost xsd
+            $this->xsdFile = $this->xmlDir.$this->xsdFile;
+        } 
     }
     
-    //
-    private function downloadXSD() {
-        $this->createXSDFile();
-        
-        //download xsd
-        
-        //write xsd
-    }
+    
     
     public function validateXML(): bool {
        
