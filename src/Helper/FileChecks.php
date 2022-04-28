@@ -90,6 +90,9 @@ class FileChecks {
             $new[$k] = serialize(strtolower($value->getFileName()));
         }
 
+        echo '<pre>';
+        var_dump($new);
+        echo '</pre>';
         //remove the duplicates
         $sorted = array_unique($new);
 

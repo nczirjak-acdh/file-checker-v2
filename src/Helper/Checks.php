@@ -16,7 +16,6 @@ class Checks {
     private $directoryList = [];
     private $fileList = [];
     private $errors = [];
-    private $fileExtensions = [];
     private $reportHelper;
 
     public function __construct() {

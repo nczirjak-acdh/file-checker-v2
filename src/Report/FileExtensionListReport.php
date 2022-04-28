@@ -12,10 +12,15 @@ class FileExtensionListReport {
     private $list = [];
     private $file;
     
+    
     public function __construct(array $list, string $file) {
         $this->list = $list;
         $this->file = $file;
         $this->createFileExtensionListData();
+    }
+    
+    public function getResult(): array {
+        return $this->fileExtensions;
     }
     
     public function __toJson() {

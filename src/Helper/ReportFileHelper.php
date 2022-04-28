@@ -80,6 +80,8 @@ class ReportFileHelper {
         if (isset($this->fileList) && count($this->fileList) > 0) {
             $this->createFileExtensionListData();
             $this->createFileList();
+            $this->createFiles();
+            $this->createFileTypeList();
         }
         
         if (isset($this->dirList) && count($this->dirList) > 0) {
@@ -122,6 +124,16 @@ class ReportFileHelper {
 
     private function createFileList() {
         $report = new \OEAW\Report\FileListReport($this->fileList, $this->settings->getActualReportDir()."/fileList.json");
+        $report->__toJson(); 
+    }
+
+    private function createFiles() {
+        $report = new \OEAW\Report\FilesReport($this->fileList, $this->settings->getActualReportDir()."/files.json");
+        $report->__toJson(); 
+    }
+    
+    private function createFileTypeList() {
+        $report = new \OEAW\Report\FileTypeListReport($this->fileList, $this->settings->getActualReportDir()."/fileTypeList.json");
         $report->__toJson(); 
     }
 
