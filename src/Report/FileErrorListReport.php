@@ -19,6 +19,9 @@ class FileErrorListReport {
     public function __toJson() {
         $result = array();
         foreach($this->list as $k => $v) {
+            echo '<pre>';
+            var_dump($v);
+            echo '</pre>';
             $result[] = array("erroryType" => $v['errorType'], "dir" => $v['dir'], "filename" => $v['filename']);
         } 
         $jsonData = array("data" => $result);

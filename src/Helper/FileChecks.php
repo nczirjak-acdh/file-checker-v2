@@ -68,13 +68,20 @@ class FileChecks {
 
             echo "bagit file check... \n";
             if ($this->obj->isBagItFile()) {
-                // $this->checkBagitFile();
+                 $this->checkBagitFile();
             }
             echo "Damaged file check... \n";
             $this->isFileDamaged();
             
+            echo "Check XML.. \n";
+            $this->checkXML();
+            
             $this->progressBar->advance();
             echo "\n";
+            
+            echo '<pre>';
+            var_dump($this->errors);
+            echo '</pre>';
         }
     }
 
@@ -136,7 +143,7 @@ class FileChecks {
             //the zip file has a password
             if ($za->status == 26) {
                 //$pwZips[] = $f;
-                $this->error[] = array("errorType" => "Zip_Password_Error",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
+                $this->errors[] = array("errorType" => "Zip_Password_Error",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
             }
             //get the files in the tmpDir and remove them
             $files = glob($this->settings->getTmpDir() . '\*'); // get all file names
@@ -162,26 +169,37 @@ class FileChecks {
             $bag = \whikloj\BagItTools\Bag::load('./aa');
         } catch (\Exception | \whikloj\BagItTools\Exceptions\BagItException $ex) {
 
-            $this->error[] = array("errorType" => "Bagit File error:" . $ex->getMessage(), "errorCode" => 0,  "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
+            $this->errors[] = array("errorType" => "Bagit File error:" . $ex->getMessage(), "errorCode" => 0,  "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
         }
     }
 
     private function isPasswordProtectedXLSXDOCX(): void {
         if (($this->obj->getExtension() == "xlsx" || $this->obj->getExtension() == "docx") && $this->obj->getType() == "application/CDFV2-encrypted") {
-            $this->error[] = array("errorType" => "This document (XLSX,DOCX) is password protected",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
+            $this->errors[] = array("errorType" => "This document (XLSX,DOCX) is password protected",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
         }
     }
 
     private function isRarFile(): void {
         if ($this->obj->getExtension() == "rar" || $this->obj->getType() == "application/rar") {
-            $this->error[] = array("errorType" => "This is a RAR file! Please check it manually!",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
+            $this->errors[] = array("errorType" => "This is a RAR file! Please check it manually!",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
         }
     }
 
     private function isFileDamaged(): void {
         if ($this->obj->getSize() < 0) {
-            $this->error[] = array("errorType" => "File damaged! Please check it manually!",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
+            $this->errors[] = array("errorType" => "File damaged! Please check it manually!",  "errorCode" => 0, "filename" => $this->obj->getFileName(), "dir" => $this->obj->getDirectory());
         }
     }
+    
+    private function checkXML(): void {
+        if ($this->obj->getExtension() == "xml" || $this->obj->getType() == "text/xml" ) {
+            $xml = new \OEAW\Helper\XMLChecker($this->obj->getFilenameAndDir(), $this->obj->getDirectory());
+            if($xml->validateXML() === false) {
+                $this->errors[] = $xml->getErrors();
+            }
+        }
+    }
+    
+    
 
 }

@@ -32,8 +32,6 @@ class CheckController {
         $this->runChecks();
         
         
-        
-        
     }
     
     private function runChecks() {
